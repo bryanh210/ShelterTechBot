@@ -4,4 +4,7 @@ module.exports = {
     API_AI_CLIENT_ACCESS_TOKEN: '9f82299af71444de8dc9db50332a8f1e',
     FB_APP_SECRET: '7b99bf9fdc6bcb5ccd9ac78569302d94',
     SERVER_URL: "https://sheltertechbot.herokuapp.com/",
+    SENDGRID_API_KEY: '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',
+    EMAIL_FROM: 'sheltertechbot@gmail.com',
+    EMAIL_TO: 'sheltertechbot@gmail.com',
 };
