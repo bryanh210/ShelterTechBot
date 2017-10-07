@@ -184,38 +184,9 @@ function handleEcho(messageId, appId, metadata) {
 
 function handleApiAiAction(sender, action, responseText, contexts, parameters) {
 	switch (action) {
-		case "get-health-resources":
-			if(parameters.hasOwnProperty("zip-code") && parameters("zip-code") !=''){
-					var request = require('request');
-
-					request({
-						url: 'https://askdarcel.org/api/resources/search',
-						qs:{
-							query: parameters("zip-code")
-						}
-
-					}, function(error, response, body){
-						if(!error && response.statusCode === 200){
-							let location = JSON.parse(body);
-							if location.hasOwnProperty("resources"){
-								let reply = `${responseText} ${location["resources"]["services"]["address"]["postal_code"]}`;
-								sendTextMessage(sender, reply);
-							}
-						} else{
-								sendTextMessage(sender, "No health services exist in your zip code");
-						}
-					});
-
-			} else{
-					sendTextMessage(sender, responseText);
-			}
-
-			break;
-
-
-		// default:
-		// 	//unhandled action, just send back the text
-		// 	sendTextMessage(sender, responseText);
+		default:
+			//unhandled action, just send back the text
+			sendTextMessage(sender, responseText);
 	}
 }
 
