@@ -8,6 +8,8 @@ const bodyParser = require('body-parser');
 const request = require('request');
 const app = express();
 const uuid = require('uuid');
+const actions = require('./actions.js');
+const fb = require('./messenger_utils.js');
 
 
 // Messenger API parameters
@@ -66,6 +68,7 @@ app.get('/webhook/', function (req, res) {
 	console.log("request");
 	if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === config.FB_VERIFY_TOKEN) {
 		res.status(200).send(req.query['hub.challenge']);
+                console.log("Successfully verified with Facebook.");
 	} else {
 		console.error("Failed validation. Make sure the validation tokens match.");
 		res.sendStatus(403);
@@ -75,7 +78,7 @@ app.get('/webhook/', function (req, res) {
 /*
  * All callbacks for Messenger are POST-ed. They will be sent to the same
  * webhook. Be sure to subscribe your app to your page to receive callbacks
- * for your page.
+ * for your page. 
  * https://developers.facebook.com/docs/messenger-platform/product-overview/setup#subscribe_app
  *
  */
@@ -133,8 +136,8 @@ function receivedMessage(event) {
 	if (!sessionIds.has(senderID)) {
 		sessionIds.set(senderID, uuid.v1());
 	}
-	//console.log("Received message for user %d and page %d at %d with message:", senderID, recipientID, timeOfMessage);
-	//console.log(JSON.stringify(message));
+	console.log("Received message for user %d and page %d at %d with message:", senderID, recipientID, timeOfMessage);
+	console.log(JSON.stringify(message));
 
 	var isEcho = message.is_echo;
 	var messageId = message.mid;
@@ -166,7 +169,7 @@ function receivedMessage(event) {
 
 function handleMessageAttachments(messageAttachments, senderID){
 	//for now just reply
-	sendTextMessage(senderID, "Attachment received. Thank you.");
+	fb.sendTextMessage(senderID, "Attachment received. Thank you.");	
 }
 
 function handleQuickReply(senderID, quickReply, messageId) {
@@ -184,16 +187,19 @@ function handleEcho(messageId, appId, metadata) {
 
 function handleApiAiAction(sender, action, responseText, contexts, parameters) {
 	switch (action) {
+                case 'request-location': //asks the user to share their location
+                        actions.requestUserLocation(sender, action, responseText, contexts, parameters);
+                        break;
 		default:
 			//unhandled action, just send back the text
-			sendTextMessage(sender, responseText);
+			fb.sendTextMessage(sender, responseText);
 	}
 }
 
 function handleMessage(message, sender) {
 	switch (message.type) {
 		case 0: //text
-			sendTextMessage(sender, message.speech);
+			fb.sendTextMessage(sender, message.speech);
 			break;
 		case 2: //quick replies
 			let replies = [];
@@ -206,7 +212,7 @@ function handleMessage(message, sender) {
 				}
 				replies.push(reply);
 			}
-			sendQuickReply(sender, message.title, replies);
+			fb.sendQuickReply(sender, message.title, replies);
 			break;
 		case 3: //image
 			sendImageMessage(sender, message.imageUrl);
@@ -221,7 +227,7 @@ function handleMessage(message, sender) {
 
 			};
 
-			callSendAPI(messageData);
+			fb.callSendAPI(messageData);
 
 			break;
 	}
@@ -274,6 +280,9 @@ function handleApiAiResponse(sender, response) {
 	let contexts = response.result.contexts;
 	let parameters = response.result.parameters;
 
+        console.log("Data from api.ai:");
+        console.log(response.result);
+
 	sendTypingOff(sender);
 
 	if (isDefined(messages) && (messages.length == 1 && messages[0].type != 0 || messages.length > 1)) {
@@ -308,19 +317,19 @@ function handleApiAiResponse(sender, response) {
 	} else if (responseText == '' && !isDefined(action)) {
 		//api ai could not evaluate input.
 		console.log('Unknown query' + response.result.resolvedQuery);
-		sendTextMessage(sender, "I'm not sure what you want. Can you be more specific?");
+		fb.sendTextMessage(sender, "I'm not sure what you want. Can you be more specific?");
 	} else if (isDefined(action)) {
 		handleApiAiAction(sender, action, responseText, contexts, parameters);
 	} else if (isDefined(responseData) && isDefined(responseData.facebook)) {
 		try {
 			console.log('Response as formatted message' + responseData.facebook);
-			sendTextMessage(sender, responseData.facebook);
+			fb.sendTextMessage(sender, responseData.facebook);
 		} catch (err) {
-			sendTextMessage(sender, err.message);
+			fb.sendTextMessage(sender, err.message);
 		}
 	} else if (isDefined(responseText)) {
 
-		sendTextMessage(sender, responseText);
+		fb.sendTextMessage(sender, responseText);
 	}
 }
 
@@ -344,17 +353,7 @@ function sendToApiAi(sender, text) {
 
 
 
-function sendTextMessage(recipientId, text) {
-	var messageData = {
-		recipient: {
-			id: recipientId
-		},
-		message: {
-			text: text
-		}
-	}
-	callSendAPI(messageData);
-}
+
 
 /*
  * Send an image using the Send API.
@@ -375,7 +374,7 @@ function sendImageMessage(recipientId, imageUrl) {
 		}
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 /*
@@ -397,7 +396,7 @@ function sendGifMessage(recipientId) {
 		}
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 /*
@@ -419,7 +418,7 @@ function sendAudioMessage(recipientId) {
 		}
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 /*
@@ -441,7 +440,7 @@ function sendVideoMessage(recipientId, videoName) {
 		}
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 /*
@@ -463,7 +462,7 @@ function sendFileMessage(recipientId, fileName) {
 		}
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 
@@ -489,7 +488,7 @@ function sendButtonMessage(recipientId, text, buttons) {
 		}
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 
@@ -509,7 +508,7 @@ function sendGenericMessage(recipientId, elements) {
 		}
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 
@@ -541,27 +540,9 @@ function sendReceiptMessage(recipientId, recipient_name, currency, payment_metho
 		}
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
-/*
- * Send a message with Quick Reply buttons.
- *
- */
-function sendQuickReply(recipientId, text, replies, metadata) {
-	var messageData = {
-		recipient: {
-			id: recipientId
-		},
-		message: {
-			text: text,
-			metadata: isDefined(metadata)?metadata:'',
-			quick_replies: replies
-		}
-	};
-
-	callSendAPI(messageData);
-}
 
 /*
  * Send a read receipt to indicate the message has been read
@@ -576,7 +557,7 @@ function sendReadReceipt(recipientId) {
 		sender_action: "mark_seen"
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 /*
@@ -593,7 +574,7 @@ function sendTypingOn(recipientId) {
 		sender_action: "typing_on"
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 /*
@@ -610,7 +591,7 @@ function sendTypingOff(recipientId) {
 		sender_action: "typing_off"
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 /*
@@ -637,7 +618,7 @@ function sendAccountLinking(recipientId) {
 		}
 	};
 
-	callSendAPI(messageData);
+	fb.callSendAPI(messageData);
 }
 
 
@@ -658,7 +639,7 @@ function greetUserText(userId) {
 				console.log("FB user: %s %s, %s",
 					user.first_name, user.last_name, user.gender);
 
-				sendTextMessage(userId, "Welcome " + user.first_name + '!');
+				fb.sendTextMessage(userId, "Welcome " + user.first_name + '!');
 			} else {
 				console.log("Cannot get data for fb user with id",
 					userId);
@@ -670,60 +651,27 @@ function greetUserText(userId) {
 	});
 }
 
-/*
- * Call the Send API. The message data goes in the body. If successful, we'll
- * get the message id in a response
- *
- */
-function callSendAPI(messageData) {
-	request({
-		uri: 'https://graph.facebook.com/v2.6/me/messages',
-		qs: {
-			access_token: config.FB_PAGE_TOKEN
-		},
-		method: 'POST',
-		json: messageData
-
-	}, function (error, response, body) {
-		if (!error && response.statusCode == 200) {
-			var recipientId = body.recipient_id;
-			var messageId = body.message_id;
-
-			if (messageId) {
-				console.log("Successfully sent message with id %s to recipient %s",
-					messageId, recipientId);
-			} else {
-				console.log("Successfully called Send API for recipient %s",
-					recipientId);
-			}
-		} else {
-			console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
-		}
-	});
-}
-
-
 
 /*
  * Postback Event
  *
- * This event is called when a postback is tapped on a Structured Message.
+ * This event is called when a postback is tapped on a Structured Message. 
  * https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received
- *
+ * 
  */
 function receivedPostback(event) {
 	var senderID = event.sender.id;
 	var recipientID = event.recipient.id;
 	var timeOfPostback = event.timestamp;
 
-	// The 'payload' param is a developer-defined field which is set in a postback
-	// button for Structured Messages.
+	// The 'payload' param is a developer-defined field which is set in a postback 
+	// button for Structured Messages. 
 	var payload = event.postback.payload;
 
 	switch (payload) {
 		default:
 			//unindentified payload
-			sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
+			fb.sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");
 			break;
 
 	}
@@ -739,7 +687,7 @@ function receivedPostback(event) {
  *
  * This event is called when a previously-sent message has been read.
  * https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-read
- *
+ * 
  */
 function receivedMessageRead(event) {
 	var senderID = event.sender.id;
@@ -759,7 +707,7 @@ function receivedMessageRead(event) {
  * This event is called when the Link Account or UnLink Account action has been
  * tapped.
  * https://developers.facebook.com/docs/messenger-platform/webhook-reference/account-linking
- *
+ * 
  */
 function receivedAccountLink(event) {
 	var senderID = event.sender.id;
@@ -775,7 +723,7 @@ function receivedAccountLink(event) {
 /*
  * Delivery Confirmation Event
  *
- * This event is sent to confirm the delivery of a message. Read more about
+ * This event is sent to confirm the delivery of a message. Read more about 
  * these fields at https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-delivered
  *
  */
@@ -800,8 +748,8 @@ function receivedDeliveryConfirmation(event) {
 /*
  * Authorization Event
  *
- * The value for 'optin.ref' is defined in the entry point. For the "Send to
- * Messenger" plugin, it is the 'data-ref' field. Read more at
+ * The value for 'optin.ref' is defined in the entry point. For the "Send to 
+ * Messenger" plugin, it is the 'data-ref' field. Read more at 
  * https://developers.facebook.com/docs/messenger-platform/webhook-reference/authentication
  *
  */
@@ -811,9 +759,9 @@ function receivedAuthentication(event) {
 	var timeOfAuth = event.timestamp;
 
 	// The 'ref' field is set in the 'Send to Messenger' plugin, in the 'data-ref'
-	// The developer can set this to an arbitrary value to associate the
+	// The developer can set this to an arbitrary value to associate the 
 	// authentication callback with the 'Send to Messenger' click event. This is
-	// a way to do account linking when the user clicks the 'Send to Messenger'
+	// a way to do account linking when the user clicks the 'Send to Messenger' 
 	// plugin.
 	var passThroughParam = event.optin.ref;
 
@@ -823,18 +771,19 @@ function receivedAuthentication(event) {
 
 	// When an authentication is received, we'll send a message back to the sender
 	// to let them know it was successful.
-	sendTextMessage(senderID, "Authentication successful");
+	fb.sendTextMessage(senderID, "Authentication successful");
 }
 
 /*
- * Verify that the callback came from Facebook. Using the App Secret from
- * the App Dashboard, we can verify the signature that is sent with each
+ * Verify that the callback came from Facebook. Using the App Secret from 
+ * the App Dashboard, we can verify the signature that is sent with each 
  * callback in the x-hub-signature field, located in the header.
  *
  * https://developers.facebook.com/docs/graph-api/webhooks#setup
  *
  */
 function verifyRequestSignature(req, res, buf) {
+        console.log("verifying that request came from facebook");
 	var signature = req.headers["x-hub-signature"];
 
 	if (!signature) {
