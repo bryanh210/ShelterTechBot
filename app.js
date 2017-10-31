@@ -1,8 +1,7 @@
 'use strict';
 
-const config = require('./config');
+const config = require('./conf.js');
 const express = require('express');
-const crypto = require('crypto');
 const bodyParser = require('body-parser');
 const request = require('request');
 const app = express();

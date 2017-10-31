@@ -1,7 +1,7 @@
 "use strict";
 const actions = require('./actions.js');
 const fb_messaging = require('../messaging.js');
-const config = require('../../config');
+const config = require('../../conf.js');
 const apiai = require('apiai');
 const utils = require('../../utils.js');
 

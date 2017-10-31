@@ -1,7 +1,7 @@
 "use strict";
 
 const request = require('request');
-const config = require('../config');
+const config = require('../conf.js');
 const crypto = require('crypto');
 
 module.exports = {
