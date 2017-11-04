@@ -1,18 +1,18 @@
 "use strict";
 
 module.exports = {
-        isDefined: isDefined
+    isDefined: isDefined
 }
 function isDefined(obj) {
-	if (typeof obj == 'undefined') {
-		return false;
-	}
+    if (typeof obj == 'undefined') {
+        return false;
+    }
 
-	if (!obj) {
-		return false;
-	}
+    if (!obj) {
+        return false;
+    }
 
-	return obj != null;
+    return obj != null;
 }
 
 
