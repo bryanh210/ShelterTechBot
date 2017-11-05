@@ -1,6 +1,7 @@
 "use strict";
 
 const apiai_interface = require("./apiai/interface.js");
+const config = require('../conf.js');
 
 module.exports = {
     handleLocation: handleLocation
@@ -23,3 +24,5 @@ function handleLocation(senderID, sessionID, attachment) {
 
     apiai_interface.sendEventToApiAi(senderID, sessionID, event_obj);
 }
+
+//
