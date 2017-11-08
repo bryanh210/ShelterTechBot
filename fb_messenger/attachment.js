@@ -2,11 +2,7 @@
 
 const apiai_interface = require("./apiai/interface.js");
 
-module.exports = {
-    handleLocation: handleLocation
-}
-
-function handleLocation(senderID, sessionID, attachment) {
+module.exports.handleLocation = function (senderID, sessionID, attachment) {
     var coordinates = attachment.payload.coordinates;
     var longitude = coordinates.long;
     var latitude = coordinates.lat;

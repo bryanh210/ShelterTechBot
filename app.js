@@ -9,6 +9,7 @@ const uuid = require('uuid');
 const fb_events = require('./fb_messenger/event_handling.js');
 const fb_utils = require('./fb_messenger/messenger_utils.js');
 const utils = require('./utils.js');
+const askdarcel = require('./askdarcel.js');
 
 
 // Messenger API parameters
@@ -28,7 +29,8 @@ if (!config.SERVER_URL) { //used for ink to static files
     throw new Error('missing SERVER_URL');
 }
 
-
+const categories = askdarcel.getCategories(function(c){return c;});
+console.log(categories);
 
 app.set('port', (process.env.PORT || 5000))
 

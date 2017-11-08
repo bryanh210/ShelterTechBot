@@ -9,6 +9,7 @@ module.exports.requestUserLocation = function (sender, action, message, contexts
 
 
 module.exports.findResource = function (sender, action, message, contexts, parameters){
+    console.log(parameters);
     fb_messaging.sendTextMessage(sender, message);
     var usrLocation = parameters.location;
     fb_messaging.sendTemplateMessage(sender, fb_sample.samplePayload);
