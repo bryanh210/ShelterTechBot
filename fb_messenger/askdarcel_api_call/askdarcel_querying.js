@@ -2,7 +2,7 @@
 
 const request = require('request');
 const getLocation = require("../apiai/actions.js");
-const config = require('../conf.js');
+const config = require('../../conf.js');
 
 
 module.exports.handlingAskDarcel = function (resource_category, longitude,latitude){
@@ -29,5 +29,5 @@ module.exports.handlingAskDarcel = function (resource_category, longitude,latitu
   if (err) { return console.log(err); }
   console.log(body.url);
   console.log(body.explanation);
-  }
+  })
 }

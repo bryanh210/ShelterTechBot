@@ -2,20 +2,65 @@
 
 const config = require('./conf.js');
 const request = require('request');
+const rp = require('request-promise-native');
 const {URL} = require('url');
 
 const BASE_URL = config.ASKDARCEL_URL;
 
-module.exports.getCategories = function () {
-    request({
-        //uri: new URL('/categories', BASE_URL), 
-        uri: "http://0.0.0.0:3000/categories",
+module.exports.getCategories = async function () {
+    let options = {
+        uri: new URL('/categories', BASE_URL), 
+        //uri: "http://0.0.0.0:3000/categories",
+        transform: function (body) {
+            return JSON.parse(body);
+        },
         method: 'GET'
-    }, function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-            console.log("Successfully requested category id mapping");
-        } else {
-            console.error("Failed getting categories", response.statusCode, response.statusMessage, body.error);
-        }
-    });
+    };
+
+    try {
+        return await rp(options);
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+/* Convert the resource category result to a mapping, with the keys 
+ * being the (lowercase) name of the resource, and the value the id 
+ * of that resource.
+ * Returns a Promise object.
+ * */
+module.exports.getCategoryMapping = async function (){
+    let categoryList;
+    try {
+        categoryList = await module.exports.getCategories();
+    } catch (err) {
+        console.log(err);
+    }
+    console.log(categoryList.categories);
+    let mapping = new Map();
+    for (let c of categoryList.categories) {
+        mapping.set(c.name.toLowerCase(), c.id);
+    }
+    return mapping;
+}
+
+module.exports.getResourcesByIdLoc = async function(id, longitude, latitude) {
+    let options = {
+        uri: new URL('/resources', BASE_URL), 
+        qs: {
+            category_id: id, 
+            long: longitude, 
+            lat: latitude
+        },
+        transform: function (body) {
+            return JSON.parse(body);
+        },
+        method: 'GET'
+    };
+
+    try {
+        return await rp(options);
+    } catch (err) {
+        console.log(err); 
+    }
 }
