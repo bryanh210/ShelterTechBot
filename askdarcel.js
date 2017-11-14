@@ -9,7 +9,7 @@ const BASE_URL = config.ASKDARCEL_URL;
 
 module.exports.getCategories = async function () {
     let options = {
-        uri: new URL('/categories', BASE_URL), 
+        uri: BASE_URL+"/categories", 
         //uri: "http://0.0.0.0:3000/categories",
         transform: function (body) {
             return JSON.parse(body);
@@ -36,7 +36,6 @@ module.exports.getCategoryMapping = async function (){
     } catch (err) {
         console.log(err);
     }
-    console.log(categoryList.categories);
     let mapping = new Map();
     for (let c of categoryList.categories) {
         mapping.set(c.name.toLowerCase(), c.id);
@@ -46,7 +45,7 @@ module.exports.getCategoryMapping = async function (){
 
 module.exports.getResourcesByIdLoc = async function(id, longitude, latitude) {
     let options = {
-        uri: new URL('/resources', BASE_URL), 
+        uri: BASE_URL+"/resources", 
         qs: {
             category_id: id, 
             long: longitude, 
