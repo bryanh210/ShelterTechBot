@@ -4,3 +4,4 @@ token
 .idea/
 /config.js
 /config
+*.swp

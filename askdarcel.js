@@ -43,6 +43,25 @@ module.exports.getCategoryMapping = async function (){
     return mapping;
 }
 
+/*
+ * Retrieves info for a single resource by its id
+ */
+module.exports.getResource = async function(id) {
+    let options = {
+        uri: BASE_URL+"/resources/"+id, 
+        transform: function (body) {
+            return JSON.parse(body);
+        },
+        method: "GET"
+    };
+
+    try {
+        return await rp(options);
+    } catch (err) {
+        console.log(err);
+    }
+}
+
 module.exports.getResourcesByIdLoc = async function(id, longitude, latitude) {
     let options = {
         uri: BASE_URL+"/resources", 
@@ -51,15 +70,14 @@ module.exports.getResourcesByIdLoc = async function(id, longitude, latitude) {
             long: longitude, 
             lat: latitude
         },
-        transform: function (body) {
-            return JSON.parse(body);
-        },
-        method: 'GET'
+        method: 'GET',
+        json: true
     };
 
     try {
         return await rp(options);
     } catch (err) {
+        console.log("Failed to retrieve resource list with ID and location");
         console.log(err); 
     }
 }

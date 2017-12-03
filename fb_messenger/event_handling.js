@@ -4,6 +4,7 @@ const fb_messaging = require('./messaging.js');
 const fb_utils = require('./messenger_utils.js');
 const fb_attach = require('./attachment.js');
 const apiai_interface = require('./apiai/interface.js');
+const templating = require('../generateResourceListing.js');
 const uuid = require('uuid');
 
 module.exports = {
@@ -90,7 +91,6 @@ function handleEcho(messageId, appId, metadata) {
 
 
 function handleCardMessages(messages, sender) {
-
     let elements = [];
     for (var m = 0; m < messages.length; m++) {
         let message = messages[m];
@@ -125,6 +125,7 @@ function handleCardMessages(messages, sender) {
     }
     fb_messaging.sendGenericMessage(sender, elements);
 }
+
 /*
  * Postback Event
  *
@@ -139,9 +140,17 @@ function receivedPostback(event) {
 
     // The 'payload' param is a developer-defined field which is set in a postback 
     // button for Structured Messages. 
-    var payload = event.postback.payload;
+    var payload = event.postback.payload.split('|');
+    // Postbacks payloads are defined as "ID|CONTENT"
+    var identifier = payload[0];
 
-    switch (payload) {
+    switch (identifier) {
+        case "GET_RESOURCE":
+            console.log("handling GET_RESOURCE postback");
+            postback_handling.handleGetResource(event, payload);
+            let msg = templating.generateResourceGeneric(resource_info);
+            //TODO: put the handling in a separate function
+            break;
         default:
             //unindentified payload
             fb_messaging.sendTextMessage(senderID, "I'm not sure what you want. Can you be more specific?");

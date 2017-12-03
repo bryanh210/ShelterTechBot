@@ -9,20 +9,23 @@ module.exports.requestUserLocation = function (sender, action, message, contexts
     fb_messaging.sendQuickReply(sender, message, replies, "request_location");
 }
 
-// parameters
 module.exports.findResource = async function (sender, action, message, contexts, parameters){
-    // send text response from API.ai to user first
-    fb_messaging.sendTextMessage(sender, message);
     var usrLocation = parameters.location;
     //fb_messaging.sendTemplateMessage(sender, fb_sample.samplePayload);
     let latitude = usrLocation.latitude;
     let longitude = usrLocation.longitude;
     let resource_categories = await askdarcel_querying.getCategoryMapping();
+    console.log(resource_categories);
     let resource_id = resource_categories.get(parameters["resource-category"]);
-
     let resources = await askdarcel_querying.getResourcesByIdLoc(resource_id, longitude,latitude);
     resources = resources["resources"];
-    let templateMessage = templateGeneration.generateListing(resources, 4);
-    console.log(templateMessage);
-    fb_messaging.sendTemplateMessage(sender, templateMessage);
-}
+    if (resources) {
+        fb_messaging.sendTextMessage(sender, "Here's what I can find:");
+        let templateMessage = templateGeneration.generateListing(resources, 4);
+        console.log(templateMessage);
+        fb_messaging.sendTemplateMessage(sender, templateMessage);
+
+    } else {
+        fb_messaging.sendTextMessage(sender, "Sorry, I couldn't find anything");
+    }
+    }

@@ -15,13 +15,38 @@ module.exports.generateListing = function (resources, max_length){
             subtitle: r.short_description, 
             buttons: [
                 {
-                    title: "View",
-                    type: "web_url", 
-                    url: r.website ? r.website : "https://askdarcel.org/resource?id="+r.id
+                    title: "Get Details",
+                    type: "postback", 
+                    payload: "GET_RESOURCE"+"|"+r.id
                 }
             ]
         }
         fbPayload.elements.push(listItem);
+    }
+
+    return fbPayload;
+}
+
+module.exports.generateResourceGeneric = function (r) {
+    let resource = r["resource"];
+    let fbPayload = {
+        template_type: "generic", 
+        elements: [{
+            title: resource.name,
+            subtitle: resource.long_description,
+            buttons: [
+                {
+                    title: "Directions", 
+                    type: "postback", 
+                    // not working atm
+                    payload: "GET_DIRECTIONS"+"|",
+                }, 
+                {
+                    title: "Website", 
+                    type: "web_url", 
+                    url: "https//askdarcel.org/resource?id="+resource.id
+                }]
+        }]
     }
 
     return fbPayload;
