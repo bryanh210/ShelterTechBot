@@ -8,15 +8,18 @@ const {URL} = require('url');
 const BASE_URL = config.ASKDARCEL_URL;
 
 module.exports.getCategories = async function () {
+  // crawl a web page
     let options = {
-        uri: BASE_URL+"/categories", 
+        uri: BASE_URL+"/categories",
         //uri: "http://0.0.0.0:3000/categories",
+        //generate a custom fulffilment value when the promise get solved
         transform: function (body) {
             return JSON.parse(body);
         },
         method: 'GET'
     };
 
+//try catch is to catch error
     try {
         return await rp(options);
     } catch (err) {
@@ -24,8 +27,8 @@ module.exports.getCategories = async function () {
     }
 }
 
-/* Convert the resource category result to a mapping, with the keys 
- * being the (lowercase) name of the resource, and the value the id 
+/* Convert the resource category result to a mapping, with the keys
+ * being the (lowercase) name of the resource, and the value the id
  * of that resource.
  * Returns a Promise object.
  * */
@@ -48,7 +51,7 @@ module.exports.getCategoryMapping = async function (){
  */
 module.exports.getResource = async function(id) {
     let options = {
-        uri: BASE_URL+"/resources/"+id, 
+        uri: BASE_URL+"/resources/"+id,
         transform: function (body) {
             return JSON.parse(body);
         },
@@ -64,10 +67,11 @@ module.exports.getResource = async function(id) {
 
 module.exports.getResourcesByIdLoc = async function(id, longitude, latitude) {
     let options = {
-        uri: BASE_URL+"/resources", 
+        uri: BASE_URL+"/resources",
+        // qs: get something from JSONrestAPI
         qs: {
-            category_id: id, 
-            long: longitude, 
+            category_id: id,
+            long: longitude,
             lat: latitude
         },
         method: 'GET',
@@ -78,6 +82,6 @@ module.exports.getResourcesByIdLoc = async function(id, longitude, latitude) {
         return await rp(options);
     } catch (err) {
         console.log("Failed to retrieve resource list with ID and location");
-        console.log(err); 
+        console.log(err);
     }
 }
